@@ -2536,6 +2536,21 @@
         // ==========================================
         // DYNAMIC HTML5 CANVAS VIDEO GENERATOR ENGINE
         // ==========================================
+        const imageCache = {};
+        function getCachedImage(src) {
+            if (!src) return null;
+            if (imageCache[src]) {
+                return imageCache[src].loaded ? imageCache[src].img : null;
+            }
+            const img = new Image();
+            imageCache[src] = { img: img, loaded: false };
+            img.onload = () => {
+                imageCache[src].loaded = true;
+            };
+            img.src = src;
+            return null;
+        }
+
         let canvasCtx = null;
         let canvasWidth = 360;
         let canvasHeight = 640;
@@ -2806,21 +2821,18 @@
                     subtitleText = scenes[3].a;
                 }
 
-                if (activeImageSrc) {
-                    const img = new Image();
-                    img.src = activeImageSrc;
-                    if (img.complete) {
-                        const zoomFactor = 1 + 0.15 * Math.sin(timestamp / 5000);
-                        const panX = 10 * Math.cos(timestamp / 3000);
-                        const panY = 10 * Math.sin(timestamp / 3000);
+                const img = getCachedImage(activeImageSrc);
+                if (img) {
+                    const zoomFactor = 1 + 0.15 * Math.sin(timestamp / 5000);
+                    const panX = 10 * Math.cos(timestamp / 3000);
+                    const panY = 10 * Math.sin(timestamp / 3000);
 
-                        const destWidth = canvasWidth * zoomFactor;
-                        const destHeight = canvasHeight * zoomFactor;
-                        const destX = (canvasWidth - destWidth) / 2 + panX;
-                        const destY = (canvasHeight - destHeight) / 2 + panY;
+                    const destWidth = canvasWidth * zoomFactor;
+                    const destHeight = canvasHeight * zoomFactor;
+                    const destX = (canvasWidth - destWidth) / 2 + panX;
+                    const destY = (canvasHeight - destHeight) / 2 + panY;
 
-                        canvasCtx.drawImage(img, destX, destY, destWidth, destHeight);
-                    }
+                    canvasCtx.drawImage(img, destX, destY, destWidth, destHeight);
                 } else {
                     drawPresetFallback(canvasCtx, selectedAppPreset, timestamp, appName);
                 }
